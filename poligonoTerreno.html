@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Mi HTML Interactivo</title>
+    <style>
+        #canvas {
+            width: 500px;
+            height: 500px;
+            background-color: #f0f0f0;
+            cursor: crosshair;
+            display: block;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+
+<div id="canvas" onclick="placeDot(event)"></div>
+
+<script>
+    function placeDot(e) {
+        const canvas = document.getElementById('canvas');
+        const dot = document.createElement('div');
+        dot.style.position = 'absolute';
+        dot.style.width = '10px';
+        dot.style.height = '10px';
+        dot.style.backgroundColor = 'black';
+        dot.style.borderRadius = '50%';
+        dot.style.left = `${e.pageX - canvas.offsetLeft - 5}px`;
+        dot.style.top = `${e.pageY - canvas.offsetTop - 5}px`;
+        canvas.appendChild(dot);
+    }
+</script>
+
+</body>
+</html>
+

@@ -1,11 +1,91 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <title>Página de Ejemplo</title>
+    <meta charset="UTF-8">
+    <title>Polígono Interactivo a Pantalla Completa</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+        }
+        #panel {
+            width: 100%;
+            height: 100%;
+            background-color: green; /* Color de fondo del panel */
+            position: relative;
+        }
+        svg {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 0;
+        }
+        .icono {
+            fill: #008080; /* Verde azulado para los puntos */
+        }
+        #eliminarPunto {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 2; /* Asegura que el botón esté sobre el SVG */
+        }
+    </style>
 </head>
 <body>
-    <h1>Hola Mundo</h1>
-    <p>Este es un ejemplo básico de una página HTML.</p>
-    <!--a href="https://www.google.com">Visita Google</a-->
+
+<div id="panel"><svg></svg></div>
+<button id="eliminarPunto">Eliminar Último Punto</button>
+
+<script>
+    var puntos = []; // Almacena todos los puntos
+
+    document.getElementById('panel').addEventListener('click', function(e) {
+        // Posición del punto ajustada
+        var rect = this.getBoundingClientRect();
+        var x = e.clientX - rect.left;
+        var y = e.clientY - rect.top;
+
+        // Agregar el nuevo punto a la lista de puntos
+        puntos.push({x, y});
+
+        // Dibujar de nuevo todos los puntos, líneas, rellenar si es necesario, y cerrar el polígono
+        dibujar();
+    });
+
+    document.getElementById('eliminarPunto').addEventListener('click', function() {
+        // Eliminar el último punto
+        puntos.pop();
+
+        // Redibujar el polígono
+        dibujar();
+    });
+
+    function dibujar() {
+        var svg = document.querySelector('svg');
+        svg.innerHTML = ''; // Limpiar el SVG para redibujar
+
+        if (puntos.length > 2) {
+            let pointsAttr = puntos.map(p => `${p.x},${p.y}`).join(' ');
+            let poligono = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+            poligono.setAttribute('points', pointsAttr);
+            poligono.setAttribute('fill', '#8B4513'); // Marrón "tierra" ajustado
+            svg.appendChild(poligono);
+        }
+
+        puntos.forEach(punto => {
+            var circulo = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            circulo.setAttribute('class', 'icono');
+            circulo.setAttribute('cx', punto.x);
+            circulo.setAttribute('cy', punto.y);
+            circulo.setAttribute('r', 5);
+            svg.appendChild(circulo);
+        });
+    }
+</script>
+
 </body>
 </html>

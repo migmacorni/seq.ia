@@ -24,7 +24,6 @@
             left: 0;
             z-index: 0;
         }
-        /* Estilo removido para .icono ya que usaremos una imagen */
         #eliminarPunto {
             position: fixed;
             top: 20px;
@@ -40,8 +39,23 @@
 
 <script>
     var puntos = []; // Almacena todos los puntos
+    var puntoSeleccionado = null; // Almacena el índice del punto seleccionado
 
-    // Añade esta función para definir el patrón con la imagen que se usará para llenar los círculos
+    document.getElementById('panel').addEventListener('click', function(e) {
+        var rect = this.getBoundingClientRect();
+        var x = e.clientX - rect.left;
+        var y = e.clientY - rect.top;
+        puntos.push({x, y});
+        puntoSeleccionado = puntos.length - 1; // Selecciona el nuevo punto
+        dibujar();
+    });
+
+    document.getElementById('eliminarPunto').addEventListener('click', function() {
+        puntos.pop();
+        puntoSeleccionado = null; // Deselecciona al eliminar un punto
+        dibujar();
+    });
+
     function definirPatronConImagen(svg) {
         var defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
         var pattern = document.createElementNS('http://www.w3.org/2000/svg', 'pattern');
@@ -49,11 +63,11 @@
         pattern.setAttribute('patternUnits', 'objectBoundingBox');
         pattern.setAttribute('width', '1');
         pattern.setAttribute('height', '1');
-        pattern.setAttribute('viewBox', '0 0 100 100'); // Asegúrate de que esto corresponde a la relación de aspecto de tu imagen
+        pattern.setAttribute('viewBox', '0 0 100 100');
         pattern.setAttribute('preserveAspectRatio', 'xMidYMid slice');
 
         var image = document.createElementNS('http://www.w3.org/2000/svg', 'image');
-        image.setAttributeNS('http://www.w3.org/1999/xlink', 'href', 'logo.png'); // Ruta a tu imagen, asegúrate de que sea accesible
+        image.setAttributeNS('http://www.w3.org/1999/xlink', 'href', 'logo.png');
         image.setAttribute('width', 100);
         image.setAttribute('height', 100);
         pattern.appendChild(image);
@@ -62,55 +76,30 @@
         svg.appendChild(defs);
     }
 
-    document.getElementById('panel').addEventListener('click', function(e) {
-        // Posición del punto ajustada
-        var rect = this.getBoundingClientRect();
-        var x = e.clientX - rect.left;
-        var y = e.clientY - rect.top;
-
-        // Agregar el nuevo punto a la lista de puntos
-        puntos.push({x, y});
-
-        // Dibujar de nuevo todos los puntos, líneas, rellenar si es necesario, y cerrar el polígono
-        dibujar();
-    });
-
-    document.getElementById('eliminarPunto').addEventListener('click', function() {
-        // Eliminar el último punto
-        puntos.pop();
-
-        // Redibujar el polígono
-        dibujar();
-    });
-
     function dibujar() {
         var svg = document.querySelector('svg');
-        svg.innerHTML = ''; // Limpiar el SVG para redibujar
-        definirPatronConImagen(svg); // Definir el patrón antes de empezar a dibujar los círculos
+        svg.innerHTML = '';
+        definirPatronConImagen(svg);
 
         if (puntos.length > 2) {
             let pointsAttr = puntos.map(p => `${p.x},${p.y}`).join(' ');
             let poligono = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
             poligono.setAttribute('points', pointsAttr);
-            poligono.setAttribute('fill', '#f0e68c'); // Marrón "tierra" ajustado//#8B4513
+            poligono.setAttribute('fill', '#f0e68c');
             svg.appendChild(poligono);
         }
 
-        puntos.forEach(punto => {
-            var circulo = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-            circulo.setAttribute('class', 'icono');
-            circulo.setAttribute('cx', punto.x);
-            circulo.setAttribute('cy', punto.y);
-            circulo.setAttribute('r', 5);
-            svg.appendChild(circulo);
-        });
-        // Dibujar los círculos con la imagen dentro
-        puntos.forEach(punto => {
+        puntos.forEach((punto, index) => {
             var circulo = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
             circulo.setAttribute('cx', punto.x);
             circulo.setAttribute('cy', punto.y);
-            circulo.setAttribute('r', 20); // Tamaño del círculo
-            circulo.setAttribute('fill', 'url(#imagenPunto)'); // Usar la imagen como relleno
+            circulo.setAttribute('r', puntoSeleccionado === index ? 25 : 20);
+            circulo.setAttribute('fill', 'url(#imagenPunto)');
+            circulo.addEventListener('click', function(event) {
+                event.stopPropagation();
+                puntoSeleccionado = index;
+                dibujar();
+            });
             svg.appendChild(circulo);
         });
     }

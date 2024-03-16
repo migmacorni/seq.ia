@@ -2,108 +2,130 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Polígono Interactivo a Pantalla Completa</title>
+    <title>SEQIA</title>
     <style>
         body, html {
             margin: 0;
             padding: 0;
             width: 100%;
             height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+        #bannerSuperior, #bannerInferior {
+            position: absolute;
+            left: 0;
+            width: 100%;
+            height: auto;
+        }
+        #bannerSuperior {
+            top: 0;
+            height: 10%;
+        }
+        #bannerInferior {
+            bottom: 50px; /* Asumiendo que el banner tiene una altura de 40px */
+            height: 10%;
         }
         #panel {
+            position: absolute;
+            top: 10%; /* Ajustado para la altura del banner superior */
+            left: 0;
             width: 100%;
-            height: 100%;
-            background-color: #ccffcc; /* Color de fondo del panel */
-            position: relative;
+            height: 80%; /* Altura ajustada para la suma de las alturas de los banners */
+            z-index: 1; /* Paneles SVG debajo de los banners */
+            background-color: #ccffcc; /* Verde muy claro como color de fondo */
         }
         svg {
             width: 100%;
             height: 100%;
-            position: absolute;
-            top: 0;
-            left: 0;
-            z-index: 0;
+            position: relative; /* Cambiado de absolute a relative dentro del panel */
+            z-index: 2; /* Los círculos y polígonos por encima del fondo */
         }
         #eliminarPunto {
             position: fixed;
-            top: 20px;
+            bottom: 10px; /* Ubicado debajo del banner inferior */
             left: 20px;
-            z-index: 2; /* Asegura que el botón esté sobre el SVG */
+            z-index: 3; /* El botón estará sobre todos los elementos */
+        }
+        .icono-seleccionado {
+            stroke: red; /* Añade un borde rojo a los círculos seleccionados */
+            stroke-width: 3; /* El ancho del borde para los círculos seleccionados */
         }
     </style>
 </head>
 <body>
+    <img id="bannerSuperior" src="bannerSuperior.jpg" alt="Banner Superior" style="height: 10%;">
+    <div id="panel"><svg></svg></div>
+    <img id="bannerInferior" src="bannerInferior.jpg" alt="Banner Inferior" style="height: 10%;">
+    <button id="eliminarPunto">Deshacer</button>
 
-<div id="panel"><svg></svg></div>
-<button id="eliminarPunto">Deshacer</button>
+    <script>
+        var puntos = []; // Almacena los puntos donde el usuario hace clic
+        var puntoSeleccionado = null; // Almacena el índice del punto seleccionado actualmente
 
-<script>
-    var puntos = []; // Almacena todos los puntos
-    var puntoSeleccionado = null; // Almacena el índice del punto seleccionado
+        document.getElementById('panel').addEventListener('click', function(e) {
+            var rect = this.getBoundingClientRect();
+            var x = e.clientX - rect.left;
+            var y = e.clientY - rect.top;
+            puntos.push({x, y});
+            puntoSeleccionado = puntos.length - 1; // Selecciona el nuevo punto
+            dibujar();
+        });
 
-    document.getElementById('panel').addEventListener('click', function(e) {
-        var rect = this.getBoundingClientRect();
-        var x = e.clientX - rect.left;
-        var y = e.clientY - rect.top;
-        puntos.push({x, y});
-        puntoSeleccionado = puntos.length - 1; // Selecciona el nuevo punto
-        dibujar();
-    });
+        document.getElementById('eliminarPunto').addEventListener('click', function() {
+            puntos.pop();
+            puntoSeleccionado = null; // Deselecciona al eliminar un punto
+            dibujar();
+        });
 
-    document.getElementById('eliminarPunto').addEventListener('click', function() {
-        puntos.pop();
-        puntoSeleccionado = null; // Deselecciona al eliminar un punto
-        dibujar();
-    });
-
-    function definirPatronConImagen(svg) {
-        var defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
-        var pattern = document.createElementNS('http://www.w3.org/2000/svg', 'pattern');
-        pattern.setAttribute('id', 'imagenPunto');
-        pattern.setAttribute('patternUnits', 'objectBoundingBox');
-        pattern.setAttribute('width', '1');
-        pattern.setAttribute('height', '1');
-        pattern.setAttribute('viewBox', '0 0 100 100');
-        pattern.setAttribute('preserveAspectRatio', 'xMidYMid slice');
-
-        var image = document.createElementNS('http://www.w3.org/2000/svg', 'image');
-        image.setAttributeNS('http://www.w3.org/1999/xlink', 'href', 'logo.png');
-        image.setAttribute('width', 100);
-        image.setAttribute('height', 100);
-        pattern.appendChild(image);
-
-        defs.appendChild(pattern);
-        svg.appendChild(defs);
-    }
-
-    function dibujar() {
-        var svg = document.querySelector('svg');
-        svg.innerHTML = '';
-        definirPatronConImagen(svg);
-
-        if (puntos.length > 2) {
-            let pointsAttr = puntos.map(p => `${p.x},${p.y}`).join(' ');
-            let poligono = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-            poligono.setAttribute('points', pointsAttr);
-            poligono.setAttribute('fill', '#f0e68c');
-            svg.appendChild(poligono);
+        function definirPatronConImagen(svg) {
+            var defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+            var pattern = document.createElementNS('http://www.w3.org/2000/svg', 'pattern');
+            pattern.setAttribute('id', 'imagenPunto');
+            pattern.setAttribute('patternUnits', 'objectBoundingBox');
+            pattern.setAttribute('width', '1');
+            pattern.setAttribute('height', '1');
+            pattern.setAttribute('viewBox', '0 0 100 100');
+            pattern.setAttribute('preserveAspectRatio', 'xMidYMid slice');
+            var image = document.createElementNS('http://www.w3.org/2000/svg', 'image');
+            image.setAttributeNS('http://www.w3.org/1999/xlink', 'href', 'logo.png');
+            image.setAttribute('width', 100);
+            image.setAttribute('height', 100);
+            pattern.appendChild(image);
+            defs.appendChild(pattern);
+            svg.appendChild(defs);
         }
 
-        puntos.forEach((punto, index) => {
-            var circulo = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-            circulo.setAttribute('cx', punto.x);
-            circulo.setAttribute('cy', punto.y);
-            circulo.setAttribute('r', puntoSeleccionado === index ? 25 : 20);
-            circulo.setAttribute('fill', 'url(#imagenPunto)');
-            circulo.addEventListener('click', function(event) {
-                event.stopPropagation();
-                puntoSeleccionado = index;
-                dibujar();
-            });
-            svg.appendChild(circulo);
-        });
-    }
-</script>
+        function dibujar() {
+            var svg = document.querySelector('svg');
+            svg.innerHTML = '';
+            definirPatronConImagen(svg);
 
+            if (puntos.length > 2) {
+                let pointsAttr = puntos.map(p => `${p.x},${p.y}`).join(' ');
+                let poligono = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+                poligono.setAttribute('points', pointsAttr);
+                poligono.setAttribute('fill', '#f0e68c');
+                svg.appendChild(poligono);
+            }
+
+            puntos.forEach((punto, index) => {
+                var circulo = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circulo.setAttribute('cx', punto.x);
+                circulo.setAttribute('cy', punto.y);
+                circulo.setAttribute('r', puntoSeleccionado === index ? 25 : 20);
+                circulo.setAttribute('fill', 'url(#imagenPunto)');
+                if (puntoSeleccionado === index) {
+                    circulo.classList.add('icono-seleccionado');
+                }
+                circulo.addEventListener('click', function(event) {
+                    event.stopPropagation();
+                    puntoSeleccionado = index;
+                    dibujar();
+                });
+                svg.appendChild(circulo);
+            });
+        }
+    </script>
 </body>
 </html>
